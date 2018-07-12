@@ -116,7 +116,7 @@ if __name__ == "__main__":
     tree = parse(mathexpr)
     d = MyTransformer().transform(tree)
     print(d)
-    #print(eval(mathexpr), "==", eval(d))
+
     #yes i know it's bad, but had no time
 
 
