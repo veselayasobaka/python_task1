@@ -13,7 +13,7 @@ math_grammar = """
         | "-" atom           -> neg
         | "(" sum ")"
         | NAME -> var
-        | function          
+        | function           
     function: 
         | "sin" "(" sum ")"  -> sin
         | "asin" "(" sum ")" -> asin
@@ -73,7 +73,33 @@ class MyTransformer(Transformer):
         return ''.join(valslist)
     def number(self, s):
         return ''.join(s)
-    def function (): pass
+    def sin(self, vals):
+        funclist = "sin(", ''.join(vals), ")"
+        return ''.join(funclist)
+    def cos(self, vals):
+        funclist = "cos(", ''.join(vals), ")"
+        return ''.join(funclist)
+    def tan(self, vals):
+        funclist = "tan(", ''.join(vals), ")"
+        return ''.join(funclist)
+    def asin(self, vals):
+        funclist = "asin(", ''.join(vals), ")"
+        return ''.join(funclist)
+    def acos(self, vals):
+        funclist = "acos(", ''.join(vals), ")"
+        return ''.join(funclist)
+    def atan(self, vals):
+        funclist = "atan(", ''.join(vals), ")"
+        return ''.join(funclist)
+    def exp(self, vals):
+        funclist = "exp(", ''.join(vals), ")"
+        return ''.join(funclist)
+    def sqrt(self, vals):
+        funclist = "sqrt(", ''.join(vals), ")"
+        return ''.join(funclist)
+    def ln(self, vals):
+        funclist = "ln(", ''.join(vals), ")"
+        return ''.join(funclist)
     def var(self, vals):
         return ''.join(vals)
 
@@ -83,7 +109,7 @@ tree_parser = Lark(math_grammar, parser = 'lalr')
 parse = tree_parser.parse
 
 if __name__ == "__main__":
-    mathexpr = "x+(y/(2*z))"
+    mathexpr = "sin(x)*cos(x)+exp(tan(x+z))/(cos(y)-sin(x))"
     print(mathexpr, "\ttree:")
     print(parse(mathexpr))
     print(parse(mathexpr).pretty())
