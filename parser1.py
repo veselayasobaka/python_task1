@@ -12,7 +12,7 @@ math_grammar = """
         | atom "**" atom     -> pow
         | "-" atom           -> neg
         | "(" sum ")"
-        | NAME -> var
+        | var
         | function          
     function: 
         | "sin" "(" sum ")"  -> sin
@@ -30,7 +30,7 @@ math_grammar = """
         | "z" -> z
 
 
-    %import common.CNAME -> NAME
+    %import common.NEWLINE
     %import common.NUMBER
     %import common.WS_INLINE
     %ignore WS_INLINE
@@ -74,8 +74,14 @@ class MyTransformer(Transformer):
     def number(self, s):
         return ''.join(s)
     def function (): pass
-    def var(self, vals):
-        return ''.join(vals)
+    def x(self, variable):
+        return 'x'
+    def y(self, variable):
+        return 'y'
+    def z(self, variable):
+        return 'z'
+
+
 
 calc_parser = Lark(math_grammar, parser='lalr', transformer=CalculateTree())
 calc = calc_parser.parse
