@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 from lark import Lark, v_args, Transformer, Tree
+from lark.lexer import Token
+from lark.visitors import Interpreter
 math_grammar = """     
     ?start: sum
     ?sum: product
@@ -51,6 +53,146 @@ class CalculateTree(Transformer):
     def var(self, name):
         return self.vars[name]
 #for test calculation ONLY with numbers
+
+
+class DifferintiateTree(Interpreter):
+
+    def var(self, tree):
+        varbl = ''.join(tree.children)
+        if varbl == 'x':
+            return Tree('number', [Token('NUMBER', '1')])
+        else:
+            return Tree('number', [Token('NUMBER', '0')])
+
+    def number(self, tree):
+        return Tree('number', [Token('NUMBER', '0')])
+
+    def add(self, tree):
+        return Tree('add', self.visit_children(tree))
+
+    def sub(self, tree):
+        return Tree('sub', self.visit_children(tree))
+
+    def mul(self, tree):
+        (left, right) = tree.children
+        return Tree('add', [
+            Tree('mul', [self.visit(left), right]),
+            Tree('mul', [left, self.visit(right)])])
+
+    def div(self, tree):
+        (left, right) = tree.children
+        return Tree('div', [
+            Tree('sub', [
+                Tree('mul', [self.visit(left), right]),
+                Tree('mul', [left, self.visit(right)])]), 
+            Tree('mul', [right, right])])
+
+    def neg(self, tree):
+        (child,) = tree.children
+        return Tree('neg', [self.visit(child)])
+
+    def pow(self, tree):
+        (left, right) = tree.children
+        if ''.join(right.children) == 'y' or ''.join(right.children) == 'z':
+            varbl = (''.join(right.children))
+            return Tree('mul', [
+                Tree('mul', [
+                    Tree('var', [Token('NAME', varbl)]),
+                    Tree('pow', [
+                         left, 
+                         Tree('sub', [
+                             Tree('var', [Token('NAME', varbl)]), 
+                             Tree('number', [Token('NUMBER', '1')])])])]),
+                self.visit(left)])
+        else:
+            try: 
+                coeff = float(''.join(right.children))
+                return Tree('mul', [
+                    Tree('mul', [
+                        Tree('number', [Token('NUMBER', coeff)]),
+                        Tree('pow', [
+                             left, 
+                             Tree('number', [Token('NUMBER', coeff-1)])])]),
+                    self.visit(left)])
+            except ValueError:
+                return "POWER MUST BE A NUMBER!"
+        
+    def sin(self, tree):
+        (child,) = tree.children
+        return Tree('mul', [Tree('cos', [child]), self.visit(child)])
+
+    def asin(self, tree):
+        (child,) = tree.children
+        return Tree('mul', [
+            Tree('div', [
+                Tree('number', [Token('NUMBER', '1')]), 
+                Tree('sqrt', [
+                    Tree('sub', [
+                        Tree('number', [Token('NUMBER', '1')]), 
+                        Tree('pow', [
+                            child, 
+                            Tree('number', [Token('NUMBER', '2')])])])])]),
+
+            self.visit(child)])
+
+    def cos(self, tree):
+        (child,) = tree.children
+        return Tree('neg', [
+            Tree('mul', [Tree('sin', [child]), self.visit(child)])])
+
+    def acos(self, tree):
+        (child,) = tree.children
+        return Tree('mul', [
+            Tree('div', [
+                Tree('number', [Token('NUMBER', '-1')]), 
+                Tree('sqrt', [
+                    Tree('sub', [
+                        Tree('number', [Token('NUMBER', '1')]), 
+                        Tree('pow', [
+                            child, 
+                            Tree('number', [Token('NUMBER', '2')])])])])]),
+
+            self.visit(child)])
+
+    def tan(self, tree):
+        (child,) = tree.children
+        return Tree('mul', [
+            Tree('pow', [
+                Tree('cos', [child]), 
+                Tree('number', [Token('NUMBER', '-2')])]), 
+            self.visit(child)])
+
+    def atan(self, tree):
+        (child,) = tree.children
+        return Tree('mul', [
+            Tree('div', [
+                Tree('number', [Token('NUMBER', '1')]), 
+                Tree('add', [
+                    Tree('number', [Token('NUMBER', '1')]), 
+                    Tree('pow', [
+                        child, 
+                        Tree('number', [Token('NUMBER', '2')])])])]),
+            self.visit(child)])
+
+    def exp(self, tree):
+        (child,) = tree.children
+        return Tree('mul', [Tree('exp', [child]), self.visit(child)])
+
+    def ln(self, tree):
+        (child,) = tree.children
+        return Tree('mul', [
+            Tree('div', [Tree('number', [Token('NUMBER', '1')]), child]), 
+            self.visit(child)])
+
+    def sqrt(self, tree):
+        (child,) = tree.children
+        return Tree('mul', [
+            Tree('div', [
+                Tree('number', [Token('NUMBER', '1')]), 
+                Tree('mul', [
+                    Tree('number', [Token('NUMBER', '2')]), 
+                    Tree('sqrt', [child])])]), 
+            self.visit(child)])
 
 class MyTransformer(Transformer):
     def add(self, vals):
@@ -109,15 +251,18 @@ tree_parser = Lark(math_grammar, parser = 'lalr')
 parse = tree_parser.parse
 
 if __name__ == "__main__":
-    mathexpr = "sin(x)*cos(x)+exp(tan(x+z))/(cos(y)-sin(x))"
-    print(mathexpr, "\ttree:")
-    print(parse(mathexpr))
-    print(parse(mathexpr).pretty())
+    mathexpr = "(sin(2*x-3)/(x**4))"
+    print(mathexpr, "\ttree:\n")
     tree = parse(mathexpr)
-    d = MyTransformer().transform(tree)
+    print(tree)
+    print(tree.pretty())
+    visitor = DifferintiateTree()
+    dif_tree = visitor.visit(tree)
+    print(dif_tree)
+    print(dif_tree.pretty())
+    d = MyTransformer().transform(dif_tree)
     print(d)
 
-    #yes i know it's bad, but had no time
 
 
 
