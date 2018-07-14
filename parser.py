@@ -328,7 +328,7 @@ def derive(func):
     tree = parse(func)
     visitor = DiffTree()
     diff_tree = visitor.visit(tree)
-    s = SimplifyTree().transform(tree)
+    s = SimplifyTree().transform(diff_tree)
     return TreeToString().transform(s)
 
 if __name__ == "__main__":
