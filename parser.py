@@ -14,7 +14,7 @@ math_grammar = """
         | atom "**" atom     -> pow
         | "-" atom           -> neg
         | "(" sum ")"
-        | NAME -> var
+        | var
         | function           
     function: 
         | "sin" "(" sum ")"  -> sin
@@ -27,33 +27,80 @@ math_grammar = """
         | "sqrt" "(" sum ")" -> sqrt
         | "ln" "(" sum ")"   -> ln
         | "tan" "(" sum ")"  -> tan
-    var : "x" -> x
-        | "y" -> y
-        | "z" -> z
+    !var : "x" 
+        | "y"
+        | "z"
 
 
-    %import common.CNAME -> NAME
     %import common.NUMBER
     %import common.WS_INLINE
     %ignore WS_INLINE
 """
 
-@v_args(inline=True)    # Affects the signatures of the methods
-class CalculateTree(Transformer):
-    from operator import add, sub, mul, truediv as div, neg, pow
-    number = float
+   
+class SimplifyTree(Transformer):
 
-    def __init__(self):
-        self.vars = {}
+    def add(self, tree):
+        (left, right) = tree
+        if left.data == right.data == 'number':
+            summ = float(''.join(left.children))+float(''.join(right.children))
+            return Tree('number', [Token('NUMBER', str(summ))])
+        elif left.data == 'number' and ''.join(left.children) == '0':
+            return right
+        elif right.data == 'number' and ''.join(right.children) == '0':
+           return left
+        else: return Tree('add', tree)
 
-    def assign_var(self, name, value):
-        self.vars[name] = value
-        return value
+    def sub(self, tree):
+        (left, right) = tree
+        if left.data == right.data == 'number':
+            summ = float(''.join(left.children))-float(''.join(right.children))
+            return Tree('number', [Token('NUMBER', str(summ))])
+        elif left.data == 'number' and ''.join(left.children) == '0':
+            return Tree('neg', [right])
+        elif right.data == 'number' and ''.join(right.children) == '0':
+           return left
+        else: return Tree('sub', tree)
 
-    def var(self, name):
-        return self.vars[name]
-#for test calculation ONLY with numbers
+    def mul(self, tree):
+        (left, right) = tree
+        if left.data == right.data == 'number':
+            summ = float(''.join(left.children))*float(''.join(right.children))
+            return Tree('number', [Token('NUMBER', str(summ))])
+        elif left.data == 'number' and ''.join(left.children) == '0':
+            return Tree('number', [Token('NUMBER', '0')])
+        elif right.data == 'number' and ''.join(right.children) == '0':
+            return Tree('number', [Token('NUMBER', '0')])
+        else: return Tree('mul', tree)
 
+    def div(self, tree):
+        (left, right) = tree
+        if left.data == right.data == 'number':
+            summ = float(''.join(left.children))/float(''.join(right.children))
+            return Tree('number', [Token('NUMBER', str(summ))])
+        elif left.data == 'number' and ''.join(left.children) == '0':
+            return Tree('number', [Token('NUMBER', '0')])
+        elif right.data == 'number' and ''.join(right.children) == '0':
+            raise ZeroDivisionError
+        else: return Tree('div', tree)
+
+    def pow(self, tree):
+        (left, right) = tree
+        if left.data == right.data == 'number':
+            summ = float(''.join(left.children))**float(''.join(right.children))
+            return Tree('number', [Token('NUMBER', str(summ))])
+        elif left.data == 'number' and ''.join(left.children) == '0':
+            return Tree('number', [Token('NUMBER', '0')])
+        elif right.data == 'number' and ''.join(right.children) == '0':
+            return Tree('number', [Token('NUMBER', '1')])
+        else: return Tree('pow', tree)
+    
+    def neg(self, tree):
+        (child,) = tree
+        if child.data == 'number':
+            numb = float(''.join(child.children))
+            return Tree('number', [Token('NUMBER', str(-numb))])
+        else: return Tree('neg', tree)
 
 class DifferintiateTree(Interpreter):
 
@@ -245,22 +292,23 @@ class MyTransformer(Transformer):
     def var(self, vals):
         return ''.join(vals)
 
-calc_parser = Lark(math_grammar, parser='lalr', transformer=CalculateTree())
+calc_parser = Lark(math_grammar, parser='lalr', transformer=DifferintiateTree())
 calc = calc_parser.parse
 tree_parser = Lark(math_grammar, parser = 'lalr')
 parse = tree_parser.parse
+tree_simplify = Lark(math_grammar, parser = 'lalr', transformer=SimplifyTree())
+simply = tree_parser.parse
 
 if __name__ == "__main__":
-    mathexpr = "(sin(2*x-3)/(x**4))"
+    mathexpr = "0+x/(3-3)*sin(3-(ln(x-0)))"
     print(mathexpr, "\ttree:\n")
     tree = parse(mathexpr)
     print(tree)
     print(tree.pretty())
-    visitor = DifferintiateTree()
-    dif_tree = visitor.visit(tree)
-    print(dif_tree)
-    print(dif_tree.pretty())
-    d = MyTransformer().transform(dif_tree)
+    s = SimplifyTree().transform(tree)
+    print(s)
+    print(s.pretty())
+    d = MyTransformer().transform(s)
     print(d)
 
 
