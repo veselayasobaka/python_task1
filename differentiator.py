@@ -255,7 +255,8 @@ class TreeToString(Transformer):
         valslist = "("+ "-"+ vals[0]+ ")"
         return valslist
     def number(self, s):
-        return ''.join(s)
+        numb = float(''.join(s))
+        return str(numb)
     def sin(self, vals):
         if vals[0][0] == '(':
             funclist = "sin"+ ''.join(vals)
@@ -327,8 +328,6 @@ tree_parser = Lark(math_grammar, parser = 'lalr')
 parse = tree_parser.parse
 
 def derive(func):
-    tree_parser = Lark(math_grammar, parser = 'lalr')
-    parse = tree_parser.parse
     tree = parse(func)
     visitor = DiffTree()
     diff_tree = visitor.visit(tree)
@@ -336,7 +335,7 @@ def derive(func):
     return TreeToString().transform(s)
 
 if __name__ == "__main__":
-    mathexpr = "(sin(x^1))^1"
+    mathexpr = "x+2*x"
     print(mathexpr, "\ttree:\n")
     tree = parse(mathexpr)
     print(tree)
@@ -344,6 +343,8 @@ if __name__ == "__main__":
     s = SimplifyTree().transform(tree)
     print(s)
     print(s.pretty())
+    d = TreeToString().transform(s)
+    print(d)
 '''
     visitor = DiffTree()
     diff_tree = visitor.visit(tree)
