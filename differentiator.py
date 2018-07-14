@@ -345,17 +345,3 @@ if __name__ == "__main__":
     print(s.pretty())
     d = TreeToString().transform(s)
     print(d)
-'''
-    visitor = DiffTree()
-    diff_tree = visitor.visit(tree)
-    print(diff_tree)
-    print(diff_tree.pretty())
-    s = SimplifyTree().transform(diff_tree)
-    print(s)
-    print(s.pretty())
-    d = TreeToString().transform(s)
-    print(d)
-'''
-
-
-
