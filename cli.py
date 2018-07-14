@@ -9,7 +9,7 @@ print("Input mathematical expression:")
 while(True):
     try:
         mathexpr = input()
-        if mathexpr == "":break
+        if mathexpr == "": break
         answer = derive(mathexpr)
     except ZeroDivisionError:
         print("Error! Zero division detected.")

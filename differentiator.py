@@ -48,7 +48,7 @@ class SimplifyTree(Transformer):
         elif left.data == 'number' and float(''.join(left.children)) == 0:
             return right
         elif right.data == 'number' and float(''.join(right.children)) == 0:
-           return left
+            return left
         else: return Tree('add', tree)
 
     def sub(self, tree):
@@ -59,7 +59,7 @@ class SimplifyTree(Transformer):
         elif left.data == 'number' and float(''.join(left.children)) == 0:
             return Tree('neg', [right])
         elif right.data == 'number' and float(''.join(right.children)) == 0:
-           return left
+            return left
         else: return Tree('sub', tree)
 
     def mul(self, tree):
