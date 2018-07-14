@@ -71,6 +71,10 @@ class SimplifyTree(Transformer):
             return Tree('number', [Token('NUMBER', '0')])
         elif right.data == 'number' and float(''.join(right.children)) == 0:
             return Tree('number', [Token('NUMBER', '0')])
+        elif left.data == 'number' and float(''.join(left.children)) == 1:
+            return right
+        elif right.data == 'number' and float(''.join(right.children)) == 1:
+            return left
         else: return Tree('mul', tree)
 
     def div(self, tree):
