@@ -2,6 +2,14 @@
 from lark import Lark, v_args, Transformer, Tree
 from lark.lexer import Token
 from lark.visitors import Interpreter
+
+##@package differentiator
+# This module parses mathematical expression, which contain x, y, z variables
+# and some mathematical functions in style "func(x)", using lark-parser module
+# [https://github.com/lark-parser/lark]. After that module diffirintiates expression 
+# by x, makes some simplifications and prints the answer.
+
+## A dictionary for lark-parser module
 math_grammar = """     
     ?start: sum
     ?sum: product
@@ -37,7 +45,9 @@ math_grammar = """
     %ignore WS_INLINE
 """
 
-   
+## SimplifyTree - inherits from the Transformer.
+# contains some simplification operations - like multiplying by 0 or 1.
+# Methods of this class act according to their names
 class SimplifyTree(Transformer):
 
     def add(self, tree):
@@ -107,6 +117,10 @@ class SimplifyTree(Transformer):
             numb = float(''.join(child.children))
             return Tree('number', [Token('NUMBER', str(-numb))])
         else: return Tree('neg', tree)
+
+## SimplifyTree - inherits from the Interpreter.
+# diffirintiates tree - starting from the root to branches.
+# Methods of this class act according to their names
 
 class DiffTree(Interpreter):
 
@@ -235,6 +249,10 @@ class DiffTree(Interpreter):
                     Tree('sqrt', [child])])]), 
             self.visit(child)])
 
+## TreeToString - inherits from the Transformer.
+# Makes transformation from the Tree to string expression.
+# Methods of this class act according to their names
+
 class TreeToString(Transformer):
     def add(self, vals):
         valslist = "("+ vals[0]+ '+'+ vals[1]+ ")" 
@@ -334,14 +352,3 @@ def derive(func):
     s = SimplifyTree().transform(diff_tree)
     return TreeToString().transform(s)
 
-if __name__ == "__main__":
-    mathexpr = "x+2*x"
-    print(mathexpr, "\ttree:\n")
-    tree = parse(mathexpr)
-    print(tree)
-    print(tree.pretty())
-    s = SimplifyTree().transform(tree)
-    print(s)
-    print(s.pretty())
-    d = TreeToString().transform(s)
-    print(d)
